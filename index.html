@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎯 Interactive Quiz Game</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- ACHIEVEMENT TOAST NOTIFICATION -->
+    <div id="achievement-toast" class="achievement-toast">
+        <div class="toast-icon" id="toast-icon">🏆</div>
+        <div>
+            <div class="toast-title" id="toast-title">Achievement!</div>
+            <div class="toast-desc"  id="toast-desc">Description</div>
+        </div>
+    </div>
+
+    <!-- CORRECT / WRONG FEEDBACK OVERLAY -->
+    <div id="feedback-overlay" class="feedback-overlay">
+        <div id="feedback-bubble" class="feedback-bubble"></div>
+    </div>
+
+    <div class="wrapper">
+
+        <!-- ==================== PAGE 1: LANDING ==================== -->
+        <div id="page-landing" class="page active">
+            <div class="landing-hero">
+                <div class="hero-chip">🎮 Interactive Quiz Game</div>
+                <h1 class="hero-title">Test Your<br>Knowledge</h1>
+                <p class="hero-sub">8 questions across Science, Geography, Art & more. Timer, streaks, achievements — are you ready?</p>
+                <div class="hero-stats">
+                    <div class="hero-stat">
+                        <span class="hero-stat-num">8</span>
+                        <span class="hero-stat-label">Questions</span>
+                    </div>
+                    <div class="hero-stat">
+                        <span class="hero-stat-num">3</span>
+                        <span class="hero-stat-label">Question Types</span>
+                    </div>
+                    <div class="hero-stat">
+                        <span class="hero-stat-num">30s</span>
+                        <span class="hero-stat-label">Per Question</span>
+                    </div>
+                </div>
+                <button class="btn-start" onclick="startQuiz()">Start Quiz →</button>
+            </div>
+
+            <p class="section-title">What's Included</p>
+            <div class="features">
+                <div class="feat"><span class="feat-icon">⏱️</span><div class="feat-title">30s Timer</div><div class="feat-desc">Each question has a countdown. Answer fast!</div></div>
+                <div class="feat"><span class="feat-icon">🔥</span><div class="feat-title">Streak System</div><div class="feat-desc">Build streaks by answering correctly in a row.</div></div>
+                <div class="feat"><span class="feat-icon">🏆</span><div class="feat-title">Achievements</div><div class="feat-desc">Unlock hidden badges like Speed Demon!</div></div>
+                <div class="feat"><span class="feat-icon">📊</span><div class="feat-title">Full Review</div><div class="feat-desc">See every answer with corrections at the end.</div></div>
+            </div>
+        </div>
+
+        <!-- ==================== PAGE 2: QUIZ ==================== -->
+        <div id="page-quiz" class="page">
+            <div class="quiz-topbar">
+                <div class="topbar-stat">
+                    <div class="topbar-label">⏱ Time Left</div>
+                    <div class="topbar-value timer-ok" id="timer-display">30s</div>
+                </div>
+                <div class="topbar-stat">
+                    <div class="topbar-label">🔥 Streak</div>
+                    <div class="topbar-value streak-val" id="streak-display">0</div>
+                </div>
+                <div class="topbar-stat">
+                    <div class="topbar-label">⚡ Combo</div>
+                    <div class="topbar-value combo-val" id="combo-display">x1</div>
+                </div>
+            </div>
+
+            <div class="quiz-card">
+                <div class="progress-row">
+                    <span class="progress-label" id="progress-label">Question 1 of 8</span>
+                    <span class="progress-label" id="progress-pct">12%</span>
+                </div>
+                <div class="progress-track">
+                    <div class="progress-fill" id="progress-fill" style="width:12.5%"></div>
+                </div>
+
+                <div class="badges" id="q-badges"></div>
+                <div class="question-text" id="q-text"></div>
+                <div id="q-options"></div>
+
+                <div class="nav-row">
+                    <button class="btn-prev" id="btn-prev" onclick="goPrev()">← Prev</button>
+                    <button class="btn-next" id="btn-next" onclick="goNext()" disabled>Next →</button>
+                </div>
+                <div class="hint-text" id="hint-text"></div>
+            </div>
+        </div>
+
+        <!-- ==================== PAGE 3: RESULTS ==================== -->
+        <div id="page-results" class="page">
+            <div class="results-hero">
+                <span class="trophy">🏆</span>
+                <div class="results-grade" id="results-grade">EXCELLENT!</div>
+                <div class="results-msg"  id="results-msg">Outstanding!</div>
+            </div>
+
+            <div class="score-grid">
+                <div class="score-box">
+                    <div class="score-box-icon">🎯</div>
+                    <span class="score-box-num" id="r-score" style="color:var(--accent)">0/8</span>
+                    <div class="score-box-label">Final Score</div>
+                    <div style="font-family:'Syne',sans-serif;font-size:18px;color:var(--warn);margin-top:6px" id="r-pct">0%</div>
+                </div>
+                <div class="score-box">
+                    <div class="score-box-icon">🔥</div>
+                    <span class="score-box-num" id="r-streak" style="color:var(--warn)">0</span>
+                    <div class="score-box-label">Best Streak</div>
+                </div>
+                <div class="score-box">
+                    <div class="score-box-icon">⭐</div>
+                    <span class="score-box-num" id="r-ach" style="color:var(--accent2)">0</span>
+                    <div class="score-box-label">Achievements</div>
+                </div>
+            </div>
+
+            <div id="ach-section" class="achievements-box" style="display:none">
+                <div class="section-title">🏅 Achievements Unlocked</div>
+                <div class="ach-grid" id="ach-grid"></div>
+            </div>
+
+            <div class="review-box">
+                <div class="section-title">📋 Question Review</div>
+                <div id="review-list"></div>
+            </div>
+
+            <button class="btn-restart" onclick="restartQuiz()">🔄 Play Again</button>
+        </div>
+
+    </div><!-- /wrapper -->
+
+    <script src="script.js"></script>
+</body>
+</html>
