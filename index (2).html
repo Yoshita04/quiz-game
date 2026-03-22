@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BrainBlast</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Cabinet+Grotesk:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+/* ─── BASE ─── */
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --v:#7c3aed;--p:#ec4899;--c:#06b6d4;--a:#f59e0b;--g:#10b981;--r:#ef4444;
+  --bg:#faf8ff;--ink:#1a0a3d;--soft:#7c6f9a;
+}
+body{
+  font-family:'Cabinet Grotesk',sans-serif;
+  background:var(--bg);color:var(--ink);
+  min-height:100vh;overflow-x:hidden;
+}
+
+/* ─── BACKGROUND LAYER ─── */
+.bg-layer{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  overflow:hidden;
+}
+.blob{position:absolute;border-radius:50%;filter:blur(70px);opacity:.35;}
+.blob1{width:600px;height:600px;background:#c4b5fd;top:-200px;left:-200px;animation:drift1 12s ease-in-out infinite alternate;}
+.blob2{width:500px;height:500px;background:#fbcfe8;top:30%;right:-150px;animation:drift2 15s ease-in-out infinite alternate;}
+.blob3{width:400px;height:400px;background:#a5f3fc;bottom:-100px;left:20%;animation:drift3 10s ease-in-out infinite alternate;}
+.blob4{width:350px;height:350px;background:#fde68a;bottom:20%;right:10%;animation:drift1 13s ease-in-out infinite alternate-reverse;}
+@keyframes drift1{to{transform:translate(40px,30px) scale(1.05)}}
+@keyframes drift2{to{transform:translate(-30px,50px) scale(.95)}}
+@keyframes drift3{to{transform:translate(50px,-40px) scale(1.08)}}
+
+/* ─── WRAPPER ─── */
+.wrap{
+  position:relative;z-index:2;
+  max-width:740px;margin:0 auto;
+  padding:28px 24px 60px;
+  min-height:100vh;display:flex;flex-direction:column;
+}
+
+/* ─── HEADER ─── */
+.header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:32px;
+}
+.logo{
+  font-family:'Syne',sans-serif;font-weight:800;font-size:1.6rem;
+  letter-spacing:-.05em;
+  background:linear-gradient(135deg,#7c3aed,#ec4899);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.pts-tag{
+  background:#1a0a3d;color:#fff;
+  font-weight:700;font-size:.78rem;
+  padding:8px 18px;border-radius:999px;
+  letter-spacing:.02em;
+}
+
+/* ─── SCREENS ─── */
+.screen{display:none;flex-direction:column;gap:0;flex:1;}
+.screen.active{display:flex;animation:enter .5s cubic-bezier(.22,1,.36,1);}
+@keyframes enter{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
+
+/* ═══════════════════════════════════
+   HOME SCREEN — organic layout
+═══════════════════════════════════ */
+/* HERO — pill-shaped banner */
+.hero{
+  background:linear-gradient(130deg,#7c3aed 0%,#a855f7 40%,#ec4899 100%);
+  border-radius:999px;
+  padding:40px 56px;
+  margin-bottom:28px;
+  position:relative;overflow:hidden;
+  display:flex;align-items:center;gap:28px;
+  box-shadow:0 20px 60px rgba(124,58,237,.35);
+}
+.hero::before{
+  content:'';position:absolute;
+  width:300px;height:300px;border-radius:50%;
+  background:rgba(255,255,255,.1);
+  top:-100px;right:-60px;
+}
+.hero-left{flex:1;}
+.hero-emoji{font-size:2.6rem;display:block;animation:bob 3s ease-in-out infinite;margin-bottom:8px;}
+@keyframes bob{0%,100%{transform:translateY(0) rotate(-5deg)}50%{transform:translateY(-10px) rotate(5deg)}}
+.hero-title{
+  font-family:'Syne',sans-serif;font-weight:800;
+  font-size:clamp(1.6rem,4vw,2.3rem);
+  line-height:1.1;letter-spacing:-.04em;color:#fff;
+}
+.hero-sub{color:rgba(255,255,255,.75);font-size:.88rem;margin-top:6px;line-height:1.5;}
+.hero-right{
+  background:rgba(255,255,255,.15);
+  backdrop-filter:blur(10px);
+  border-radius:999px;
+  padding:20px 28px;
+  text-align:center;
+  border:1px solid rgba(255,255,255,.25);
+  flex-shrink:0;
+}
+.hero-right .big{font-family:'Syne',sans-serif;font-size:2.2rem;font-weight:800;color:#fff;display:block;}
+.hero-right .sm{font-size:.7rem;color:rgba(255,255,255,.7);text-transform:uppercase;letter-spacing:.1em;}
+
+/* FLOATING STAT BUBBLES */
+.bubbles{
+  display:flex;gap:12px;margin-bottom:28px;flex-wrap:wrap;
+}
+.bubble{
+  background:#fff;
+  border-radius:999px;
+  padding:10px 22px;
+  display:flex;align-items:center;gap:8px;
+  box-shadow:0 4px 20px rgba(124,58,237,.12);
+  font-size:.82rem;font-weight:600;
+  border:2px solid transparent;
+  transition:all .2s;
+}
+.bubble:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(124,58,237,.2);}
+.bubble .dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+
+/* SECTION */
+.sec{margin-bottom:24px;}
+.sec-title{
+  font-family:'Syne',sans-serif;font-weight:700;font-size:.72rem;
+  text-transform:uppercase;letter-spacing:.16em;
+  color:var(--soft);margin-bottom:12px;
+  display:flex;align-items:center;gap:8px;
+}
+.sec-title::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(124,58,237,.2),transparent);}
+
+/* CATEGORY — horizontal scroll pills */
+.cat-scroll{
+  display:flex;gap:10px;
+  overflow-x:auto;padding-bottom:6px;
+  -ms-overflow-style:none;scrollbar-width:none;
+}
+.cat-scroll::-webkit-scrollbar{display:none;}
+.cat-pill{
+  flex-shrink:0;
+  background:#fff;border-radius:999px;
+  padding:12px 22px;
+  display:flex;align-items:center;gap:8px;
+  cursor:pointer;border:2px solid rgba(124,58,237,.12);
+  font-size:.85rem;font-weight:600;transition:all .22s;
+  box-shadow:0 2px 12px rgba(0,0,0,.06);
+  color:var(--ink);font-family:'Cabinet Grotesk',sans-serif;
+}
+.cat-pill .ce{font-size:1.1rem;}
+.cat-pill:hover{border-color:var(--v);transform:scale(1.04);box-shadow:0 6px 20px rgba(124,58,237,.2);}
+.cat-pill.active{
+  background:linear-gradient(135deg,#7c3aed,#a855f7);
+  color:#fff;border-color:transparent;
+  box-shadow:0 6px 24px rgba(124,58,237,.4);
+}
+
+/* DIFFICULTY — uneven pill row */
+.diff-pills{display:flex;gap:8px;flex-wrap:wrap;}
+.diff-pill{
+  flex:1;min-width:70px;
+  border-radius:999px;
+  padding:10px 18px;
+  border:2px solid rgba(124,58,237,.12);
+  background:#fff;cursor:pointer;
+  font-size:.82rem;font-weight:700;
+  font-family:'Cabinet Grotesk',sans-serif;
+  transition:all .2s;text-align:center;
+  box-shadow:0 2px 12px rgba(0,0,0,.05);
+  color:var(--soft);
+}
+.diff-pill:hover{transform:translateY(-2px);}
+.diff-pill.ae{background:linear-gradient(135deg,#d1fae5,#a7f3d0);border-color:#6ee7b7;color:#065f46;}
+.diff-pill.am{background:linear-gradient(135deg,#fef3c7,#fde68a);border-color:#fbbf24;color:#78350f;}
+.diff-pill.ah{background:linear-gradient(135deg,#fee2e2,#fecaca);border-color:#f87171;color:#7f1d1d;}
+.diff-pill.ax{background:linear-gradient(135deg,#ede9fe,#ddd6fe);border-color:#a78bfa;color:#4c1d95;}
+
+/* Q COUNT — big number toggle */
+.qnum-row{display:flex;gap:10px;}
+.qnum{
+  flex:1;border-radius:999px;
+  padding:11px 10px;text-align:center;
+  border:2px solid rgba(124,58,237,.12);
+  background:#fff;cursor:pointer;
+  font-family:'Syne',sans-serif;font-weight:800;font-size:1rem;
+  transition:all .2s;color:var(--soft);
+  box-shadow:0 2px 12px rgba(0,0,0,.05);
+}
+.qnum:hover{transform:scale(1.06);}
+.qnum.aq{
+  background:linear-gradient(135deg,#0e7490,#06b6d4);
+  color:#fff;border-color:transparent;
+  box-shadow:0 6px 24px rgba(6,182,212,.35);
+}
+
+/* START BUTTON — big blob shape */
+.btn-launch{
+  width:100%;padding:20px;
+  background:linear-gradient(135deg,#7c3aed,#a855f7,#ec4899);
+  color:#fff;border:none;cursor:pointer;
+  font-family:'Syne',sans-serif;font-weight:800;font-size:1.1rem;
+  letter-spacing:.02em;
+  border-radius:999px;
+  box-shadow:0 8px 36px rgba(124,58,237,.45);
+  transition:all .25s;display:flex;align-items:center;justify-content:center;gap:10px;
+  margin-top:8px;
+}
+.btn-launch:hover{transform:translateY(-4px) scale(1.01);box-shadow:0 16px 48px rgba(124,58,237,.55);}
+.btn-launch:active{transform:translateY(0) scale(.99);}
+
+/* ═══════════════════════════════════
+   QUIZ SCREEN
+═══════════════════════════════════ */
+
+/* HUD — asymmetric floating bar */
+.hud-bar{
+  display:flex;align-items:center;gap:0;
+  background:#1a0a3d;border-radius:999px;
+  padding:6px 8px;margin-bottom:24px;
+  box-shadow:0 8px 32px rgba(26,10,61,.25);
+}
+.hud-item{
+  flex:1;text-align:center;padding:8px 4px;
+  border-radius:999px;transition:background .2s;
+}
+.hud-item .hv{
+  font-family:'Syne',sans-serif;font-weight:800;font-size:1.3rem;
+  display:block;line-height:1;
+}
+.hud-item .hl{font-size:.6rem;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.4);margin-top:2px;}
+#hv-time{color:#a78bfa;}
+#hv-time.d{color:#f87171;animation:pls .5s infinite alternate;}
+#hv-streak{color:#f472b6;}
+#hv-score{color:#34d399;}
+@keyframes pls{from{opacity:1}to{opacity:.3}}
+
+/* PROGRESS — wavy strip */
+.prog-strip{
+  height:10px;background:rgba(124,58,237,.12);
+  border-radius:999px;overflow:hidden;margin-bottom:8px;
+}
+.prog-fill{
+  height:100%;border-radius:999px;
+  background:linear-gradient(90deg,#7c3aed,#ec4899,#f59e0b);
+  background-size:300% 100%;
+  animation:wave 3s linear infinite;
+  transition:width .5s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes wave{0%{background-position:0%}100%{background-position:300%}}
+.prog-row{display:flex;justify-content:space-between;font-size:.74rem;color:var(--soft);margin-bottom:20px;}
+
+/* META CHIPS */
+.q-meta{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
+.meta-chip{
+  font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;
+  padding:5px 14px;border-radius:999px;
+}
+.mc-cat{background:rgba(124,58,237,.1);color:#7c3aed;border:1.5px solid rgba(124,58,237,.2);}
+.mc-easy{background:#d1fae5;color:#065f46;border:1.5px solid #6ee7b7;}
+.mc-medium{background:#fef3c7;color:#78350f;border:1.5px solid #fbbf24;}
+.mc-hard{background:#fee2e2;color:#7f1d1d;border:1.5px solid #f87171;}
+
+/* QUESTION — speech bubble shape */
+.q-bubble{
+  background:#fff;
+  border-radius:32px 32px 32px 8px;
+  padding:30px 32px;
+  margin-bottom:18px;
+  position:relative;
+  box-shadow:0 8px 40px rgba(124,58,237,.13);
+  border:2px solid rgba(124,58,237,.08);
+}
+.q-bubble::before{
+  content:'';position:absolute;
+  left:28px;bottom:-20px;
+  width:0;height:0;
+  border-left:20px solid transparent;
+  border-top:20px solid rgba(124,58,237,.08);
+}
+.q-bubble::after{
+  content:'';position:absolute;
+  left:30px;bottom:-16px;
+  width:0;height:0;
+  border-left:18px solid transparent;
+  border-top:18px solid #fff;
+}
+.q-text{
+  font-family:'Syne',sans-serif;font-weight:700;
+  font-size:clamp(.98rem,2.4vw,1.15rem);line-height:1.55;
+}
+
+/* LIFELINES — icon pills floating */
+.lifelines{
+  display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap;
+}
+.ll{
+  flex:1;min-width:80px;
+  background:#fff;border-radius:999px;
+  padding:10px 14px;border:2px solid rgba(124,58,237,.12);
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  cursor:pointer;font-size:.78rem;font-weight:700;
+  font-family:'Cabinet Grotesk',sans-serif;
+  color:var(--ink);transition:all .2s;
+  box-shadow:0 2px 14px rgba(0,0,0,.07);
+}
+.ll:hover:not(:disabled){border-color:var(--c);color:#0891b2;transform:translateY(-2px);}
+.ll:disabled{opacity:.3;cursor:default;}
+
+/* ANSWERS — organic blob buttons */
+.ans-wrap{
+  display:grid;grid-template-columns:1fr 1fr;gap:12px;
+  margin-bottom:16px;
+}
+@media(max-width:460px){.ans-wrap{grid-template-columns:1fr;}}
+
+.ans{
+  background:#fff;
+  border-radius:20px;
+  padding:18px 18px;
+  cursor:pointer;text-align:left;
+  color:var(--ink);
+  font-family:'Cabinet Grotesk',sans-serif;
+  font-size:.88rem;font-weight:500;line-height:1.4;
+  border:2.5px solid rgba(124,58,237,.1);
+  transition:all .22s cubic-bezier(.34,1.56,.64,1);
+  display:flex;align-items:center;gap:14px;
+  box-shadow:0 2px 16px rgba(0,0,0,.06);
+  position:relative;overflow:hidden;
+}
+/* Alternating corner radii for organic feel */
+.ans:nth-child(1){border-radius:20px 8px 20px 20px;}
+.ans:nth-child(2){border-radius:8px 20px 20px 20px;}
+.ans:nth-child(3){border-radius:20px 20px 8px 20px;}
+.ans:nth-child(4){border-radius:20px 20px 20px 8px;}
+
+.ans-ltr{
+  width:32px;height:32px;min-width:32px;border-radius:50%;
+  background:linear-gradient(135deg,#ede9fe,#ddd6fe);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Syne',sans-serif;font-size:.75rem;font-weight:800;
+  color:#7c3aed;transition:all .2s;flex-shrink:0;
+}
+.ans:hover:not(:disabled){
+  border-color:#7c3aed;
+  background:linear-gradient(135deg,rgba(124,58,237,.06),rgba(168,85,247,.04));
+  transform:translateY(-3px) scale(1.01);
+  box-shadow:0 10px 30px rgba(124,58,237,.2);
+}
+.ans:hover:not(:disabled) .ans-ltr{background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;}
+
+.ans.correct{
+  border-color:#10b981!important;
+  background:linear-gradient(135deg,rgba(16,185,129,.12),rgba(52,211,153,.06))!important;
+  animation:popIn .35s cubic-bezier(.34,1.56,.64,1);
+}
+.ans.correct .ans-ltr{background:linear-gradient(135deg,#10b981,#34d399);color:#fff;}
+
+.ans.wrong{
+  border-color:#ef4444!important;
+  background:linear-gradient(135deg,rgba(239,68,68,.1),rgba(248,113,113,.05))!important;
+  animation:wrongShk .4s ease;
+}
+.ans.wrong .ans-ltr{background:linear-gradient(135deg,#ef4444,#f87171);color:#fff;}
+.ans:disabled{cursor:default;}
+
+@keyframes popIn{0%{transform:scale(1)}50%{transform:scale(1.05)}100%{transform:scale(1)}}
+@keyframes wrongShk{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+
+/* FEEDBACK — rounded bar */
+.fb-bar{
+  border-radius:20px;padding:14px 20px;
+  display:none;align-items:center;gap:12px;
+  border:2px solid transparent;margin-bottom:14px;
+}
+.fb-bar.show{display:flex;animation:enter .3s ease;}
+.fb-bar.ok{background:linear-gradient(135deg,rgba(16,185,129,.1),rgba(16,185,129,.04));border-color:rgba(16,185,129,.35);}
+.fb-bar.bad{background:linear-gradient(135deg,rgba(239,68,68,.1),rgba(239,68,68,.04));border-color:rgba(239,68,68,.3);}
+.fb-icon{font-size:1.4rem;}
+.fb-txt{font-size:.84rem;color:var(--soft);line-height:1.45;flex:1;}
+.fb-txt strong{color:var(--ink);}
+.fb-pts{
+  font-family:'Syne',sans-serif;font-size:.82rem;font-weight:800;
+  padding:5px 16px;border-radius:999px;
+  background:linear-gradient(135deg,#7c3aed,#ec4899);color:#fff;
+  white-space:nowrap;
+}
+
+/* NEXT BUTTON */
+.btn-next{
+  align-self:flex-end;
+  background:linear-gradient(135deg,#7c3aed,#9333ea);color:#fff;
+  font-family:'Syne',sans-serif;font-weight:800;font-size:.9rem;
+  padding:14px 32px;border-radius:999px;border:none;cursor:pointer;
+  display:none;align-items:center;gap:8px;
+  box-shadow:0 6px 24px rgba(124,58,237,.4);transition:all .2s;
+}
+.btn-next.show{display:flex;animation:enter .3s ease;}
+.btn-next:hover{transform:translateY(-3px);box-shadow:0 10px 32px rgba(124,58,237,.5);}
+
+/* ═══════════════════════════════════
+   STREAK POPUP
+═══════════════════════════════════ */
+.s-overlay{
+  position:fixed;inset:0;background:rgba(10,0,40,.5);
+  backdrop-filter:blur(8px);z-index:100;display:none;
+}
+.s-overlay.show{display:block;}
+.s-popup{
+  position:fixed;top:50%;left:50%;
+  transform:translate(-50%,-50%) scale(0);
+  background:#fff;
+  border-radius:40px;padding:40px 56px;text-align:center;z-index:200;
+  box-shadow:0 24px 80px rgba(124,58,237,.3);
+  transition:transform .4s cubic-bezier(.34,1.56,.64,1);
+  pointer-events:none;
+  border:3px solid;
+  border-image:linear-gradient(135deg,#7c3aed,#ec4899,#f59e0b) 1;
+  border-radius:40px; /* needs re-applying after border-image */
+}
+/* workaround for border-image + border-radius */
+.s-popup::before{
+  content:'';position:absolute;inset:-3px;
+  border-radius:43px;
+  background:linear-gradient(135deg,#7c3aed,#ec4899,#f59e0b);
+  z-index:-1;
+}
+.s-popup.show{transform:translate(-50%,-50%) scale(1);}
+.sp-em{font-size:4rem;display:block;margin-bottom:8px;}
+.sp-t{
+  font-family:'Syne',sans-serif;font-size:1.7rem;font-weight:800;
+  background:linear-gradient(135deg,#7c3aed,#ec4899);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.sp-s{font-size:.85rem;color:var(--soft);margin-top:5px;}
+
+/* ═══════════════════════════════════
+   RESULTS SCREEN
+═══════════════════════════════════ */
+
+/* Big pill hero */
+.r-hero{
+  background:linear-gradient(135deg,#7c3aed 0%,#a855f7 50%,#ec4899 100%);
+  border-radius:40px;padding:44px 36px;text-align:center;
+  position:relative;overflow:hidden;
+  box-shadow:0 16px 60px rgba(124,58,237,.4);
+  margin-bottom:20px;
+}
+.r-hero::before{
+  content:'';position:absolute;
+  width:280px;height:280px;border-radius:50%;
+  background:rgba(255,255,255,.1);
+  top:-80px;right:-60px;
+}
+.r-hero::after{
+  content:'';position:absolute;
+  width:180px;height:180px;border-radius:50%;
+  background:rgba(255,255,255,.08);
+  bottom:-50px;left:-40px;
+}
+.r-grade{font-size:5rem;display:block;margin-bottom:8px;position:relative;z-index:1;}
+.r-title{
+  font-family:'Syne',sans-serif;font-size:clamp(1.6rem,4vw,2rem);
+  font-weight:800;color:#fff;letter-spacing:-.04em;position:relative;z-index:1;
+}
+.r-sub{color:rgba(255,255,255,.7);font-size:.9rem;margin-top:6px;position:relative;z-index:1;}
+.r-pts{
+  font-family:'Syne',sans-serif;font-size:4rem;font-weight:800;
+  color:#fff;display:block;margin:14px 0 2px;position:relative;z-index:1;line-height:1;
+}
+.r-pts-l{color:rgba(255,255,255,.6);font-size:.8rem;position:relative;z-index:1;}
+
+/* STAT PILLS — horizontal */
+.r-stats{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;}
+.r-stat{
+  flex:1;min-width:120px;
+  background:#fff;border-radius:999px;
+  padding:16px 20px;text-align:center;
+  box-shadow:0 4px 20px rgba(124,58,237,.1);
+  border:2px solid rgba(124,58,237,.08);
+}
+.r-stat .rv{
+  font-family:'Syne',sans-serif;font-size:1.5rem;font-weight:800;display:block;
+}
+.r-stat .rl{font-size:.65rem;color:var(--soft);text-transform:uppercase;letter-spacing:.1em;margin-top:2px;}
+
+/* ACHIEVEMENTS — scattered pill grid */
+.ach-wrap{
+  background:#fff;
+  border-radius:32px;padding:28px;
+  box-shadow:0 4px 24px rgba(124,58,237,.09);
+  margin-bottom:16px;
+  border:2px solid rgba(124,58,237,.06);
+}
+.ach-head{
+  font-family:'Syne',sans-serif;font-size:.72rem;font-weight:700;
+  text-transform:uppercase;letter-spacing:.14em;color:var(--soft);
+  margin-bottom:16px;
+}
+.ach-pills{display:flex;gap:10px;flex-wrap:wrap;}
+.ach-pill{
+  display:flex;align-items:center;gap:8px;
+  border-radius:999px;padding:8px 18px;
+  border:2px solid rgba(124,58,237,.12);
+  background:#faf8ff;font-size:.8rem;font-weight:600;
+  opacity:.3;transition:all .4s;
+}
+.ach-pill.on{
+  opacity:1;
+  background:linear-gradient(135deg,#fef3c7,#fde68a);
+  border-color:#fbbf24;
+  box-shadow:0 4px 18px rgba(245,158,11,.3);
+  animation:glow .6s ease;
+}
+@keyframes glow{0%{box-shadow:0 0 0 rgba(245,158,11,0)}50%{box-shadow:0 0 28px rgba(245,158,11,.5)}100%{box-shadow:0 0 0 rgba(245,158,11,0)}}
+.ach-pill .ai{font-size:1.1rem;}
+.ach-pill .an{font-size:.78rem;font-weight:700;color:var(--ink);}
+
+/* REVIEW */
+.review-wrap{
+  background:#fff;border-radius:32px;padding:28px;
+  box-shadow:0 4px 24px rgba(124,58,237,.09);
+  margin-bottom:20px;
+  border:2px solid rgba(124,58,237,.06);
+}
+.r-item{padding:12px 0;border-bottom:1.5px solid rgba(124,58,237,.07);}
+.r-item:last-child{border-bottom:none;}
+.rq{font-size:.86rem;font-weight:600;margin-bottom:6px;}
+.rtw{display:flex;gap:8px;flex-wrap:wrap;}
+.rt{font-size:.71rem;font-weight:700;padding:4px 14px;border-radius:999px;}
+.rt.ok{background:#d1fae5;color:#065f46;}
+.rt.bad{background:#fee2e2;color:#7f1d1d;}
+.rt.ans{background:#e0f2fe;color:#0c4a6e;}
+
+/* RESULT ACTIONS */
+.r-actions{display:flex;gap:12px;}
+.btn-home{
+  padding:16px 28px;border-radius:999px;
+  border:2.5px solid rgba(124,58,237,.2);
+  background:#fff;color:var(--ink);
+  font-family:'Syne',sans-serif;font-weight:800;font-size:.9rem;
+  cursor:pointer;transition:all .2s;
+  box-shadow:0 2px 12px rgba(0,0,0,.07);
+}
+.btn-home:hover{border-color:var(--v);color:var(--v);transform:translateY(-2px);}
+
+/* CONFETTI */
+#cc{position:fixed;inset:0;pointer-events:none;z-index:400;}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:6px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:rgba(124,58,237,.2);border-radius:3px;}
+</style>
+</head>
+<body>
+
+<!-- Animated background blobs -->
+<div class="bg-layer">
+  <div class="blob blob1"></div>
+  <div class="blob blob2"></div>
+  <div class="blob blob3"></div>
+  <div class="blob blob4"></div>
+</div>
+
+<canvas id="cc"></canvas>
+<div class="s-overlay" id="s-overlay"></div>
+<div class="s-popup" id="s-popup">
+  <span class="sp-em" id="sp-em">🔥</span>
+  <div class="sp-t" id="sp-t">3x Streak!</div>
+  <div class="sp-s" id="sp-s">On fire!</div>
+</div>
+
+<div class="wrap">
+  <div class="header">
+    <div class="logo">BrainBlast</div>
+    <div class="pts-tag" id="pts-tag">0 pts ✦</div>
+  </div>
+
+  <!-- ══════ HOME ══════ -->
+  <div class="screen active" id="scr-home">
+
+    <div class="hero">
+      <div class="hero-left">
+        <span class="hero-emoji">🧠</span>
+        <h1 class="hero-title">Test Your<br>Knowledge!</h1>
+        <p class="hero-sub">Randomized every round — no two games alike.</p>
+      </div>
+      <div class="hero-right">
+        <span class="big">20+</span>
+        <span class="sm">Questions</span>
+      </div>
+    </div>
+
+    <div class="bubbles">
+      <div class="bubble"><span class="dot" style="background:#7c3aed"></span>5 Categories</div>
+      <div class="bubble"><span class="dot" style="background:#ec4899"></span>3 Lifelines</div>
+      <div class="bubble"><span class="dot" style="background:#f59e0b"></span>Smart Scoring</div>
+      <div class="bubble"><span class="dot" style="background:#06b6d4"></span>6 Achievements</div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-title">Pick Category</div>
+      <div class="cat-scroll">
+        <button class="cat-pill active" data-cat="all"        onclick="sCat(this,'all')">        <span class="ce">🌐</span>All Topics</button>
+        <button class="cat-pill"        data-cat="science"    onclick="sCat(this,'science')">    <span class="ce">🔬</span>Science</button>
+        <button class="cat-pill"        data-cat="history"    onclick="sCat(this,'history')">    <span class="ce">🏛️</span>History</button>
+        <button class="cat-pill"        data-cat="geography"  onclick="sCat(this,'geography')">  <span class="ce">🌍</span>Geography</button>
+        <button class="cat-pill"        data-cat="popculture" onclick="sCat(this,'popculture')"> <span class="ce">🎬</span>Pop Culture</button>
+        <button class="cat-pill"        data-cat="sports"     onclick="sCat(this,'sports')">     <span class="ce">⚽</span>Sports</button>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-title">Difficulty</div>
+      <div class="diff-pills">
+        <button class="diff-pill ae" data-d="easy"   onclick="sDiff(this,'easy')">🟢 Easy</button>
+        <button class="diff-pill"    data-d="medium" onclick="sDiff(this,'medium')">🟡 Medium</button>
+        <button class="diff-pill"    data-d="hard"   onclick="sDiff(this,'hard')">🔴 Hard</button>
+        <button class="diff-pill"    data-d="mixed"  onclick="sDiff(this,'mixed')">🎲 Mixed</button>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-title">How Many?</div>
+      <div class="qnum-row">
+        <button class="qnum"    data-q="5"  onclick="sQ(this,5)">5</button>
+        <button class="qnum aq" data-q="10" onclick="sQ(this,10)">10</button>
+        <button class="qnum"    data-q="15" onclick="sQ(this,15)">15</button>
+        <button class="qnum"    data-q="20" onclick="sQ(this,20)">20</button>
+      </div>
+    </div>
+
+    <button class="btn-launch" onclick="startQuiz()">🚀 Launch Quiz!</button>
+  </div>
+
+  <!-- ══════ QUIZ ══════ -->
+  <div class="screen" id="scr-quiz">
+
+    <div class="hud-bar">
+      <div class="hud-item">
+        <span class="hv" id="hv-time">30</span>
+        <span class="hl">⏱ Time</span>
+      </div>
+      <div class="hud-item">
+        <span class="hv" id="hv-streak">0🔥</span>
+        <span class="hl">Streak</span>
+      </div>
+      <div class="hud-item">
+        <span class="hv" id="hv-score">0</span>
+        <span class="hl">⭐ Score</span>
+      </div>
+    </div>
+
+    <div class="prog-strip"><div class="prog-fill" id="prog-fill"></div></div>
+    <div class="prog-row">
+      <span id="q-ctr">Q 1 of 10</span>
+      <span id="q-pct">0%</span>
+    </div>
+
+    <div class="q-meta">
+      <div class="meta-chip mc-cat"  id="q-cat-c"></div>
+      <div class="meta-chip mc-easy" id="q-diff-c"></div>
+    </div>
+
+    <div class="q-bubble">
+      <div class="q-text" id="q-text"></div>
+    </div>
+
+    <div class="lifelines">
+      <button class="ll" id="ll-5050" onclick="useLL('5050')">🎯 50/50</button>
+      <button class="ll" id="ll-skip"  onclick="useLL('skip')">⏭ Skip</button>
+      <button class="ll" id="ll-hint"  onclick="useLL('hint')">💡 Hint</button>
+    </div>
+
+    <div class="ans-wrap" id="ans-wrap"></div>
+
+    <div class="fb-bar" id="fb-bar">
+      <span class="fb-icon" id="fb-icon"></span>
+      <div  class="fb-txt"  id="fb-txt"></div>
+      <div  class="fb-pts"  id="fb-pts" style="display:none"></div>
+    </div>
+
+    <button class="btn-next" id="btn-next" onclick="nextQ()">Next →</button>
+  </div>
+
+  <!-- ══════ RESULTS ══════ -->
+  <div class="screen" id="scr-results">
+
+    <div class="r-hero">
+      <span class="r-grade" id="r-grade">🏆</span>
+      <div class="r-title"  id="r-title">Excellent!</div>
+      <div class="r-sub"    id="r-sub"></div>
+      <span class="r-pts"   id="r-pts">0</span>
+      <div class="r-pts-l">total points</div>
+    </div>
+
+    <div class="r-stats">
+      <div class="r-stat"><span class="rv" id="rs-c" style="color:#10b981">0</span><span class="rl">Correct</span></div>
+      <div class="r-stat"><span class="rv" id="rs-s" style="color:#ec4899">0</span><span class="rl">Best Streak</span></div>
+      <div class="r-stat"><span class="rv" id="rs-t" style="color:#06b6d4">0s</span><span class="rl">Avg Time</span></div>
+    </div>
+
+    <div class="ach-wrap">
+      <div class="ach-head">🏅 Achievements Unlocked</div>
+      <div class="ach-pills" id="ach-pills"></div>
+    </div>
+
+    <div class="review-wrap">
+      <div class="ach-head">📋 Question Review</div>
+      <div id="review-list"></div>
+    </div>
+
+    <div class="r-actions">
+      <button class="btn-home" onclick="goHome()">🏠 Home</button>
+      <button class="btn-launch" onclick="restartQuiz()" style="flex:1;margin-top:0">🔄 Play Again</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const QB=[
+  {id:1,cat:'science',diff:'easy',time:30,q:"What planet is called the Red Planet?",opts:["Mars","Venus","Jupiter","Saturn"],ans:0,hint:"4th from the Sun.",exp:"Mars looks red due to iron oxide on its surface."},
+  {id:2,cat:'science',diff:'easy',time:30,q:"What gas do plants absorb to make food?",opts:["Oxygen","CO₂","Nitrogen","Hydrogen"],ans:1,hint:"We exhale this.",exp:"Plants absorb CO₂ and release oxygen via photosynthesis."},
+  {id:3,cat:'science',diff:'medium',time:25,q:"Approximately how fast does light travel?",opts:["300,000 km/s","150,000 km/s","450,000 km/s","3,000 km/s"],ans:0,hint:"~3 × 10⁸ m/s.",exp:"The speed of light in vacuum is ~299,792,458 m/s."},
+  {id:4,cat:'science',diff:'medium',time:25,q:"What is the chemical symbol for Gold?",opts:["Gd","Gl","Au","Ag"],ans:2,hint:"From Latin 'Aurum'.",exp:"Au comes from the Latin word Aurum."},
+  {id:5,cat:'science',diff:'hard',time:20,q:"Which sub-atomic particle has no electric charge?",opts:["Proton","Electron","Neutron","Positron"],ans:2,hint:"Hints at neutrality.",exp:"Neutrons are neutral particles in the nucleus."},
+  {id:6,cat:'science',diff:'hard',time:20,q:"What organelle is the powerhouse of the cell?",opts:["Nucleus","Ribosome","Mitochondria","Golgi body"],ans:2,hint:"Produces ATP.",exp:"Mitochondria generate ATP through cellular respiration."},
+  {id:7,cat:'history',diff:'easy',time:30,q:"Who was the 1st President of the United States?",opts:["Abraham Lincoln","George Washington","Thomas Jefferson","Ben Franklin"],ans:1,hint:"On the $1 bill.",exp:"Washington served 1789–1797."},
+  {id:8,cat:'history',diff:'easy',time:30,q:"In which year did World War II end?",opts:["1943","1944","1945","1946"],ans:2,hint:"Year after D-Day.",exp:"WWII ended 1945 — V-E Day May, V-J Day August."},
+  {id:9,cat:'history',diff:'medium',time:25,q:"Which ancient wonder stood in Alexandria, Egypt?",opts:["Colossus of Rhodes","Lighthouse of Alexandria","Temple of Artemis","Hanging Gardens"],ans:1,hint:"Guided sailors for centuries.",exp:"The Pharos lighthouse was one of the Seven Wonders."},
+  {id:10,cat:'history',diff:'medium',time:25,q:"The French Revolution began in which year?",opts:["1776","1789","1799","1804"],ans:1,hint:"Same year as Washington.",exp:"The French Revolution began 1789 with the storming of the Bastille."},
+  {id:11,cat:'history',diff:'hard',time:20,q:"Which empire was called 'the empire on which the sun never sets'?",opts:["Roman","Ottoman","British","Mongol"],ans:2,hint:"Queen Victoria ruled it.",exp:"The British Empire covered ~24% of Earth's land area."},
+  {id:12,cat:'geography',diff:'easy',time:30,q:"What is the capital of Australia?",opts:["Sydney","Melbourne","Canberra","Brisbane"],ans:2,hint:"Not the biggest city!",exp:"Canberra became capital as a compromise between Sydney and Melbourne."},
+  {id:13,cat:'geography',diff:'easy',time:30,q:"Which is the longest river in the world?",opts:["Amazon","Nile","Yangtze","Mississippi"],ans:1,hint:"Flows through Egypt.",exp:"The Nile stretches ~6,650 km through northeastern Africa."},
+  {id:14,cat:'geography',diff:'medium',time:25,q:"How many countries are in Africa?",opts:["48","54","62","50"],ans:1,hint:"More than 50.",exp:"Africa has 54 sovereign countries."},
+  {id:15,cat:'geography',diff:'medium',time:25,q:"Which country has the most natural lakes?",opts:["USA","Russia","Brazil","Canada"],ans:3,hint:"Also has the most fresh water.",exp:"Canada has over 879,000 lakes."},
+  {id:16,cat:'geography',diff:'hard',time:20,q:"The Strait of Malacca separates which two landmasses?",opts:["Java & Bali","Malay Peninsula & Sumatra","India & Sri Lanka","Borneo & Philippines"],ans:1,hint:"One of the busiest shipping lanes.",exp:"The strait lies between the Malay Peninsula and Sumatra."},
+  {id:17,cat:'popculture',diff:'easy',time:30,q:"Which band performed 'Bohemian Rhapsody'?",opts:["The Beatles","Led Zeppelin","Queen","Pink Floyd"],ans:2,hint:"Freddie Mercury sang it.",exp:"Queen released it in 1975 on 'A Night at the Opera'."},
+  {id:18,cat:'popculture',diff:'easy',time:30,q:"What is the highest-grossing film franchise of all time?",opts:["Star Wars","MCU","Harry Potter","James Bond"],ans:1,hint:"Started with Iron Man, 2008.",exp:"The MCU has grossed over $29 billion worldwide."},
+  {id:19,cat:'popculture',diff:'medium',time:25,q:"In which year was the first iPhone released?",opts:["2005","2006","2007","2008"],ans:2,hint:"Steve Jobs unveiled it at Macworld.",exp:"Apple's first iPhone was announced January 9, 2007."},
+  {id:20,cat:'popculture',diff:'medium',time:25,q:"Which TV series is set in the fictional continent of Westeros?",opts:["The Witcher","Lord of the Rings","Game of Thrones","House of the Dragon"],ans:2,hint:"'Winter is coming.'",exp:"Game of Thrones (HBO) aired 2011–2019."},
+  {id:21,cat:'popculture',diff:'hard',time:20,q:"What year was the first Harry Potter book published?",opts:["1995","1996","1997","1998"],ans:2,hint:"JK Rowling's debut.",exp:"Harry Potter and the Philosopher's Stone — June 1997."},
+  {id:22,cat:'sports',diff:'easy',time:30,q:"How many players on a standard football (soccer) team?",opts:["9","10","11","12"],ans:2,hint:"Includes the goalkeeper.",exp:"Each team fields 11 players including the goalkeeper."},
+  {id:23,cat:'sports',diff:'easy',time:30,q:"Which country invented cricket?",opts:["India","Australia","South Africa","England"],ans:3,hint:"Formalised in the 18th century.",exp:"Cricket originated in south-east England."},
+  {id:24,cat:'sports',diff:'medium',time:25,q:"How many Grand Slam tournaments are there in tennis?",opts:["2","3","4","5"],ans:2,hint:"Australian, French, Wimbledon + one more.",exp:"Australian Open, French Open, Wimbledon, US Open."},
+  {id:25,cat:'sports',diff:'medium',time:25,q:"In which city were the 2020 Summer Olympics held?",opts:["Paris","Los Angeles","Tokyo","Sydney"],ans:2,hint:"Delayed by COVID-19.",exp:"The 2020 Tokyo Olympics were held in 2021."},
+  {id:26,cat:'sports',diff:'hard',time:20,q:"Who holds the record for most Olympic gold medals?",opts:["Carl Lewis","Mark Spitz","Michael Phelps","Usain Bolt"],ans:2,hint:"An American swimmer.",exp:"Michael Phelps has 23 Olympic gold medals."},
+];
+
+const ACHS=[
+  {id:'perfect', icon:'💯',name:'Perfect!',    check:(s,t)=>s.score>=t*100},
+  {id:'speed',   icon:'⚡',name:'Speedster',   check:(s,t,avg)=>avg<8},
+  {id:'fire',    icon:'🔥',name:'On Fire',     check:s=>s.best>=5},
+  {id:'noll',    icon:'🧠',name:'No Lifelines',check:s=>!s.ll5050&&!s.llskip&&!s.llhint},
+  {id:'firstok', icon:'🎯',name:'Sharp Start', check:s=>s.rev.length>0&&s.rev[0].ok},
+  {id:'scholar', icon:'📚',name:'Scholar',     check:(s,t)=>t>=10},
+];
+
+let G={cat:'all',diff:'easy',qcount:10};
+
+const shuf=a=>{const r=[...a];for(let i=r.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[r[i],r[j]]=[r[j],r[i]];}return r;};
+const $=id=>document.getElementById(id);
+const show=id=>{document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));$(id).classList.add('active');};
+
+function sCat(el,v){document.querySelectorAll('.cat-pill').forEach(b=>b.classList.remove('active'));el.classList.add('active');G.cat=v;}
+function sDiff(el,v){document.querySelectorAll('.diff-pill').forEach(b=>b.className='diff-pill');const m={easy:'ae',medium:'am',hard:'ah',mixed:'ax'};el.classList.add(m[v]);G.diff=v;}
+function sQ(el,n){document.querySelectorAll('.qnum').forEach(b=>b.classList.remove('aq'));el.classList.add('aq');G.qcount=n;}
+
+function startQuiz(){
+  let pool=[...QB];
+  if(G.cat!=='all') pool=pool.filter(q=>q.cat===G.cat);
+  if(G.diff!=='mixed') pool=pool.filter(q=>q.diff===G.diff);
+  if(pool.length<3) pool=[...QB].filter(q=>G.cat!=='all'?q.cat===G.cat:true);
+  if(!pool.length) pool=[...QB];
+  pool=shuf(pool);
+  G={...G,qs:pool.slice(0,Math.min(G.qcount,pool.length)),i:0,score:0,streak:0,best:0,answered:false,timer:null,tl:30,times:[],rev:[],ll5050:false,llskip:false,llhint:false};
+  $('pts-tag').textContent='0 pts ✦';
+  ['ll-5050','ll-skip','ll-hint'].forEach(id=>{$(id).disabled=false;$(id).style.opacity='';});
+  show('scr-quiz');renderQ();
+}
+
+function renderQ(){
+  const q=G.qs[G.i],tot=G.qs.length;
+  $('hv-streak').textContent=G.streak+'🔥';
+  $('hv-score').textContent=G.score;
+  $('pts-tag').textContent=G.score+' pts ✦';
+  const pct=Math.round((G.i/tot)*100);
+  $('prog-fill').style.width=pct+'%';
+  $('q-ctr').textContent='Q '+(G.i+1)+' of '+tot;
+  $('q-pct').textContent=pct+'%';
+  const cm={science:'Science',history:'History',geography:'Geography',popculture:'Pop Culture',sports:'Sports'};
+  $('q-cat-c').textContent=cm[q.cat]||q.cat;
+  const dc=$('q-diff-c');
+  dc.textContent=q.diff[0].toUpperCase()+q.diff.slice(1);
+  dc.className='meta-chip mc-'+q.diff;
+  $('q-text').textContent=q.q;
+  $('fb-bar').className='fb-bar';
+  $('btn-next').className='btn-next';
+  G.answered=false;
+  const lets=['A','B','C','D'];
+  const idxs=shuf([0,1,2,3].slice(0,q.opts.length));
+  const grid=$('ans-wrap');grid.innerHTML='';
+  idxs.forEach((orig,pos)=>{
+    const btn=document.createElement('button');
+    btn.className='ans';btn.dataset.orig=orig;
+    btn.innerHTML=`<span class="ans-ltr">${lets[pos]}</span><span>${q.opts[orig]}</span>`;
+    btn.onclick=()=>pick(btn,orig);
+    grid.appendChild(btn);
+  });
+  startTimer(q.time||30);
+  if(!G.ll5050) $('ll-5050').disabled=false;
+  if(!G.llskip) $('ll-skip').disabled=false;
+  if(!G.llhint) $('ll-hint').disabled=false;
+}
+
+function startTimer(s){
+  clearInterval(G.timer);G.tl=s;
+  const el=$('hv-time');el.textContent=s;el.className='hv';
+  G._ts=Date.now();
+  G.timer=setInterval(()=>{G.tl--;el.textContent=G.tl;if(G.tl<=8)el.id='hv-time',el.classList.add('d');if(G.tl<=0){clearInterval(G.timer);timeOut();}},1000);
+}
+
+function timeOut(){
+  if(G.answered)return;G.answered=true;
+  const q=G.qs[G.i];G.times.push(q.time||30);G.streak=0;
+  $('hv-streak').textContent='0🔥';
+  document.querySelectorAll('.ans').forEach(b=>{b.disabled=true;if(+b.dataset.orig===q.ans)b.classList.add('correct');});
+  showFB(false,q,0);$('btn-next').classList.add('show');
+  G.rev.push({q:q.q,ok:false,user:null,cor:q.opts[q.ans]});
+}
+
+function pick(btn,orig){
+  if(G.answered)return;G.answered=true;clearInterval(G.timer);
+  const q=G.qs[G.i];
+  const taken=Math.round((Date.now()-G._ts)/1000);G.times.push(taken);
+  const ok=orig===q.ans;
+  document.querySelectorAll('.ans').forEach(b=>{b.disabled=true;if(+b.dataset.orig===q.ans)b.classList.add('correct');});
+  if(!ok)btn.classList.add('wrong');
+  let pts=0;
+  if(ok){
+    G.streak++;if(G.streak>G.best)G.best=G.streak;
+    const base=q.diff==='hard'?150:q.diff==='medium'?100:75;
+    const spd=Math.max(0,Math.floor((G.tl/(q.time||30))*50));
+    const sb=G.streak>=3?(G.streak-2)*20:0;
+    pts=base+spd+sb;G.score+=pts;
+    $('hv-score').textContent=G.score;
+    $('pts-tag').textContent=G.score+' pts ✦';
+    $('hv-streak').textContent=G.streak+'🔥';
+    if([3,5,7,10].includes(G.streak))streakPop(G.streak);
+  }else{G.streak=0;$('hv-streak').textContent='0🔥';}
+  showFB(ok,q,pts);$('btn-next').classList.add('show');
+  G.rev.push({q:q.q,ok,user:q.opts[orig],cor:q.opts[q.ans]});
+}
+
+function showFB(ok,q,pts){
+  const fb=$('fb-bar');
+  fb.className='fb-bar show '+(ok?'ok':'bad');
+  $('fb-icon').textContent=ok?'✅':'❌';
+  $('fb-txt').innerHTML=ok?`<strong>Correct!</strong> ${q.exp}`:`<strong>Wrong!</strong> ${q.exp}`;
+  const p=$('fb-pts');
+  if(ok&&pts>0){p.style.display='block';p.textContent='+'+pts+' pts';}else p.style.display='none';
+}
+
+function nextQ(){G.i++;if(G.i>=G.qs.length)showResults();else renderQ();}
+
+function useLL(type){
+  if(G.answered)return;
+  const q=G.qs[G.i];
+  if(type==='5050'){
+    G.ll5050=true;$('ll-5050').disabled=true;
+    let r=0;document.querySelectorAll('.ans').forEach(b=>{if(r<2&&+b.dataset.orig!==q.ans){b.style.opacity='.15';b.disabled=true;r++;}});
+  }
+  if(type==='skip'){
+    G.llskip=true;$('ll-skip').disabled=true;clearInterval(G.timer);
+    G.answered=true;G.streak=0;G.times.push(0);
+    $('hv-streak').textContent='0🔥';
+    G.rev.push({q:q.q,ok:false,user:'Skipped',cor:q.opts[q.ans]});
+    $('btn-next').classList.add('show');
+    const fb=$('fb-bar');fb.className='fb-bar show';
+    $('fb-icon').textContent='⏭';
+    $('fb-txt').innerHTML=`<strong>Skipped!</strong> Answer: <strong>${q.opts[q.ans]}</strong>`;
+    $('fb-pts').style.display='none';
+  }
+  if(type==='hint'){
+    G.llhint=true;$('ll-hint').disabled=true;
+    const fb=$('fb-bar');fb.className='fb-bar show';
+    $('fb-icon').textContent='💡';
+    $('fb-txt').innerHTML=`<strong>Hint:</strong> ${q.hint}`;
+    $('fb-pts').style.display='none';
+  }
+}
+
+function streakPop(n){
+  const m={3:['🔥','3× Streak!','Warming up!'],5:['🌋','5× Streak!','You\'re on fire!'],7:['⚡','7× Streak!','Unstoppable!'],10:['🏆','10× Streak!','Absolute Legend!']};
+  const[e,t,s]=m[n]||['🔥',n+'× Streak!','Keep going!'];
+  $('sp-em').textContent=e;$('sp-t').textContent=t;$('sp-s').textContent=s;
+  $('s-popup').classList.add('show');$('s-overlay').classList.add('show');
+  setTimeout(()=>{$('s-popup').classList.remove('show');$('s-overlay').classList.remove('show');},1900);
+}
+
+function showResults(){
+  clearInterval(G.timer);
+  const tot=G.qs.length,correct=G.rev.filter(r=>r.ok).length;
+  const pct=Math.round((correct/tot)*100);
+  const avg=G.times.length?Math.round(G.times.reduce((a,b)=>a+b,0)/G.times.length):0;
+  let grade,title,sub;
+  if(pct===100){grade='🏆';title='Perfect Score!';sub='Every single one — absolutely legendary!';}
+  else if(pct>=80){grade='🥇';title='Excellent!';sub='Outstanding performance!';}
+  else if(pct>=60){grade='🥈';title='Great Job!';sub='Solid effort — keep pushing!';}
+  else if(pct>=40){grade='🥉';title='Not Bad!';sub='Decent start — review and retry!';}
+  else{grade='📚';title='Keep Studying!';sub="Every expert was once a beginner.";}
+  $('r-grade').textContent=grade;$('r-title').textContent=title;$('r-sub').textContent=sub;
+  $('r-pts').textContent=G.score;
+  $('rs-c').textContent=correct+'/'+tot;
+  $('rs-s').textContent=G.best;
+  $('rs-t').textContent=avg+'s';
+  const ap=$('ach-pills');ap.innerHTML='';
+  ACHS.forEach(a=>{
+    const on=a.check(G,tot,avg);
+    const d=document.createElement('div');
+    d.className='ach-pill'+(on?' on':'');
+    d.innerHTML=`<span class="ai">${a.icon}</span><span class="an">${a.name}</span>`;
+    ap.appendChild(d);
+  });
+  const rl=$('review-list');rl.innerHTML='';
+  G.rev.forEach((r,i)=>{
+    const d=document.createElement('div');d.className='r-item';
+    d.innerHTML=`<div class="rq">Q${i+1}. ${r.q}</div><div class="rtw">${r.user?`<span class="rt ${r.ok?'ok':'bad'}">${r.user}</span>`:''}${!r.ok?`<span class="rt ans">✓ ${r.cor}</span>`:''}${r.ok?`<span class="rt ok">✓ Correct</span>`:''}</div>`;
+    rl.appendChild(d);
+  });
+  show('scr-results');
+  if(pct>=70) confetti();
+}
+
+function goHome(){clearInterval(G.timer);show('scr-home');}
+function restartQuiz(){startQuiz();}
+
+function confetti(){
+  const cv=$('cc');const ctx=cv.getContext('2d');
+  cv.width=window.innerWidth;cv.height=window.innerHeight;
+  const cols=['#7c3aed','#ec4899','#f59e0b','#06b6d4','#10b981','#a78bfa','#fcd34d','#f97316','#34d399'];
+  const ps=Array.from({length:140},()=>({
+    x:Math.random()*cv.width,y:Math.random()*-cv.height,
+    w:6+Math.random()*10,h:4+Math.random()*7,
+    c:cols[Math.floor(Math.random()*cols.length)],
+    vx:(Math.random()-.5)*5,vy:2+Math.random()*4,
+    r:Math.random()*360,rv:(Math.random()-.5)*8
+  }));
+  let f=0;const MAX=180;
+  function draw(){
+    ctx.clearRect(0,0,cv.width,cv.height);
+    ps.forEach(p=>{
+      ctx.save();ctx.translate(p.x+p.w/2,p.y+p.h/2);ctx.rotate(p.r*Math.PI/180);
+      ctx.fillStyle=p.c;ctx.globalAlpha=Math.max(0,1-f/MAX);
+      ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);ctx.restore();
+      p.x+=p.vx;p.y+=p.vy;p.r+=p.rv;
+    });
+    f++;if(f<MAX)requestAnimationFrame(draw);else ctx.clearRect(0,0,cv.width,cv.height);
+  }
+  draw();
+}
+</script>
+</body>
+</html>
